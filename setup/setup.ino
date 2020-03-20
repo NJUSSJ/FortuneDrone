@@ -82,10 +82,10 @@ void loop(){
 		center_channel_3 = receiver_input_channel_3;
 		center_channel_4 = receiver_input_channel_4;
 		Serial.println(F("")); Serial.println(F("Center positions stored."));
-		Serial.print(F("Digital input 08 = ")); Serial.println(receiver_input_channel_1);
-		Serial.print(F("Digital input 09 = ")); Serial.println(receiver_input_channel_2);
-		Serial.print(F("Digital input 10 = ")); Serial.println(receiver_input_channel_3);
-		Serial.print(F("Digital input 11 = ")); Serial.println(receiver_input_channel_4);
+		Serial.print(F("Digital input 10 = ")); Serial.println(receiver_input_channel_1);
+		Serial.print(F("Digital input 11 = ")); Serial.println(receiver_input_channel_2);
+		Serial.print(F("Digital input 12 = ")); Serial.println(receiver_input_channel_3);
+		Serial.print(F("Digital input 13 = ")); Serial.println(receiver_input_channel_4);
 		Serial.println(F("")); Serial.println(F(""));
 	}
 
@@ -95,7 +95,7 @@ void loop(){
 		// Check for throttle movement
 		check_receiver_inputs(1);
 		Serial.print(F("Throttle is connected to digital input "));
-		Serial.println((channel_3_assign & 0b00000111) + 7);
+		Serial.println((channel_3_assign & 0b00000111) + 9);
 		if ( channel_3_assign & 0b10000000 ) {
 			Serial.println(F("Channel inverted = yes"));
 		} else {
@@ -110,7 +110,7 @@ void loop(){
 		//Check for throttle movement
 		check_receiver_inputs(2);
 		Serial.print(F("Roll is connected to digital input "));
-		Serial.println((channel_1_assign & 0b00000111) + 7);
+		Serial.println((channel_1_assign & 0b00000111) + 9);
 		if ( channel_1_assign & 0b10000000 ) 
 			Serial.println(F("Channel inverted = yes"));
 		else 
@@ -126,7 +126,7 @@ void loop(){
 		//Check for throttle movement
 		check_receiver_inputs(3);
 		Serial.print(F("Pitch is connected to digital input "));
-		Serial.println((channel_2_assign & 0b00000111) + 7);
+		Serial.println((channel_2_assign & 0b00000111) + 9);
 		if ( channel_2_assign & 0b10000000 ) 
 			Serial.println(F("Channel inverted = yes"));
 		else 
@@ -142,7 +142,7 @@ void loop(){
 		//Check for throttle movement
 		check_receiver_inputs(4);
 		Serial.print(F("Yaw is connected to digital input "));
-		Serial.println((channel_4_assign & 0b00000111) + 7);
+		Serial.println((channel_4_assign & 0b00000111) + 9);
 		if ( channel_4_assign & 0b10000000 ) 
 			Serial.println(F("Channel inverted = yes"));
 		else 
@@ -161,25 +161,25 @@ void loop(){
 		Serial.println(F(""));
 		Serial.println(F(""));
 		Serial.println(F("High, low and center values found during setup"));
-		Serial.print(F("Digital input 08 values:"));
+		Serial.print(F("Digital input 10 values:"));
 		Serial.print(low_channel_1);
 		Serial.print(F(" - "));
 		Serial.print(center_channel_1);
 		Serial.print(F(" - "));
 		Serial.println(high_channel_1);
-		Serial.print(F("Digital input 09 values:"));
+		Serial.print(F("Digital input 11 values:"));
 		Serial.print(low_channel_2);
 		Serial.print(F(" - "));
 		Serial.print(center_channel_2);
 		Serial.print(F(" - "));
 		Serial.println(high_channel_2);
-		Serial.print(F("Digital input 10 values:"));
+		Serial.print(F("Digital input 13 values:"));
 		Serial.print(low_channel_3);
 		Serial.print(F(" - "));
 		Serial.print(center_channel_3);
 		Serial.print(F(" - "));
 		Serial.println(high_channel_3);
-		Serial.print(F("Digital input 11 values:"));
+		Serial.print(F("Digital input 13 values:"));
 		Serial.print(low_channel_4);
 		Serial.print(F(" - "));
 		Serial.print(center_channel_4);
@@ -263,7 +263,7 @@ void loop(){
 			delay(3000);
 			Serial.println(F(""));
 			Serial.println(F("==================================================="));
-			erial.println(F("Gyro register settings"));
+			Serial.println(F("Gyro register settings"));
 			Serial.println(F("==================================================="));
 			start_gyro(); //Setup the gyro for further use
 		}

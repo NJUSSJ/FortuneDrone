@@ -29,7 +29,6 @@
  * ============================================================
  * flysky 查看 mode：长按 OK，按 DOWN 向下找到 Sticks mode，按 OK。
  */
-const int PIN_CH1 = 2, PIN_CH2 = 3, PIN_CH3 = 4, PIN_CH4 = 5;
 int INDEX_CH1 = 0, INDEX_CH2 = 1, INDEX_CH3 = 2, INDEX_CH4 = 3;
 volatile int channels[4] = {0, 0, 0, 0};
 // 控制 roll、pitch、yaw 和 throttle 的 channel
@@ -44,13 +43,13 @@ void initAttach_channel(){
 	// @see https://www.arduino.cc/en/Reference/PortManipulation
 	// @see https://forum.arduino.cc/index.php?topic=400719.0
 	PCICR |= (1 << PCIE0);  
-	PCMSK0 |= (1 << PCINT4);	// Set PCINT0 (digital input 10) to trigger an interrupt on state change.
-	PCMSK0 |= (1 << PCINT5);	// Set PCINT0 (digital input 11) to trigger an interrupt on state change.
-	PCMSK0 |= (1 << PCINT6);	// Set PCINT0 (digital input 12) to trigger an interrupt on state change.
-	PCMSK0 |= (1 << PCINT7);	// Set PCINT0 (digital input 13) to trigger an interrupt on state change.
+	PCMSK0 |= (1 << PCINT0);	// Set PCINT0 (digital input 8) to trigger an interrupt on state change.
+	PCMSK0 |= (1 << PCINT1);	// Set PCINT0 (digital input 9) to trigger an interrupt on state change.
+	PCMSK0 |= (1 << PCINT2);	// Set PCINT0 (digital input 10) to trigger an interrupt on state change.
+	PCMSK0 |= (1 << PCINT3);	// Set PCINT0 (digital input 11) to trigger an interrupt on state change.
 
     // 设置控制 roll、pitch、yaw 和 throttle 的 channel
-    INDEX_PWM = INDEX_CH3;
+	INDEX_PWM = INDEX_CH3;
 	INDEX_YAW = INDEX_CH4;
 	INDEX_ROLL = INDEX_CH1;
 	INDEX_PITCH = INDEX_CH2;
@@ -68,47 +67,47 @@ void initAttach_channel(){
 ISR(PCINT0_vect){
 	current_time = micros();
 	// Channel 1=========================================
-	if (PINB & B00010000){   								// Is input 10 high?
-		if (!last_channel_1){								// Input 10 : 0 -> 1.
+	if (PINB & B00000001){   								// Is input 8 high?
+		if (!last_channel_1){								// Input 8 : 0 -> 1.
 			last_channel_1 = true;
 			time_1 = current_time;
 		}
 	}
-	else if (last_channel_1){								// Input 10 : 1 -> 0.
+	else if (last_channel_1){								// Input 8 : 1 -> 0.
 		last_channel_1 = false;
 		channels[INDEX_CH1] = current_time - time_1;
 	}
 	// Channel 2=========================================
-	if (PINB & B00100000 ){									// Is input 11 high?
-		if (!last_channel_2){								// Input 11 : 0 -> 1.
+	if (PINB & B00000010 ){									// Is input 9 high?
+		if (!last_channel_2){								// Input 9 : 0 -> 1.
 			last_channel_2 = true;
 			time_2 = current_time;
 		}
 	}
-	else if (last_channel_2){								// Input 11 : 1 -> 0.
+	else if (last_channel_2){								// Input 9 : 1 -> 0.
 		last_channel_2 = false;
 		channels[INDEX_CH2] = current_time - time_2;
 	}
 	//Channel 3=========================================
-	if (PINB & B01000000 ){  								// Is input 12 high?
-		if (!last_channel_3){								// Input 12 : 0 -> 1.
+	if (PINB & B00000100 ){  								// Is input 10 high?
+		if (!last_channel_3){								// Input 10 : 0 -> 1.
 			last_channel_3 = true;
 			time_3 = current_time;
 		}
 	}
-	else if (last_channel_3){								// Input 12 : 1 -> 0.
+	else if (last_channel_3){								// Input 10 : 1 -> 0.
 		last_channel_3 = false;
 		channels[INDEX_CH3] = current_time - time_3;
 
 	}
 	//Channel 4=========================================
-	if (PINB & B10000000 ){									// Is input 13 high?
-		if (!last_channel_4){								// Input 13 : 0 -> 1.
+	if (PINB & B00001000 ){									// Is input 11 high?
+		if (!last_channel_4){								// Input 11 : 0 -> 1.
 			last_channel_4 = true;
 			time_4 = current_time;
 		}
 	}
-	else if (last_channel_4){								// Input 13 : 1 -> 0.
+	else if (last_channel_4){								// Input 11 : 1 -> 0.
 		last_channel_4 = false;
 		channels[INDEX_CH4] = current_time - time_4;
 	}

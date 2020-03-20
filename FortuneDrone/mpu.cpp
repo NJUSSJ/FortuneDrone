@@ -11,7 +11,7 @@
 #define ACC_CONFIG  0x1C
 #define DLPF_CONFIG	0x1A
 
-#define COUNT_calibrate	500
+#define COUNT_calibrate	2000
 
 MPU::MPU(){
 	gyro_offset[INDEX_X] = 0;
@@ -148,4 +148,3 @@ void MPU::calibrateGyro(){
 	gyro_offset[INDEX_Y] /= COUNT_calibrate;
 	gyro_offset[INDEX_Z] /= COUNT_calibrate;
 }
-

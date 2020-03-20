@@ -2,15 +2,23 @@
 #include <Arduino.h>
 #include "PID.h"
 
-#define ANGLE_PITCH_KP 	8.0
-#define ANGLE_PITCH_KI 	5.0
-#define ANGLE_PITCH_KD 	1.5
-#define ANGLE_ROLL_KP 	8.0
-#define ANGLE_ROLL_KI 	5.0
-#define ANGLE_ROLL_KD 	1.5
-#define ANGLE_YAW_KP 	0
-#define ANGLE_YAW_KI 	0
-#define ANGLE_YAW_KD 	0
+#define ANGLE_PITCH_KP 	0
+#define ANGLE_PITCH_KI 	0
+#define ANGLE_PITCH_KD 	0
+#define ANGLE_ROLL_KP 	0
+#define ANGLE_ROLL_KI 	0
+#define ANGLE_ROLL_KD 	0
+#define ANGLE_YAW_KP 	8.0
+#define ANGLE_YAW_KI 	7
+#define ANGLE_YAW_KD 	0.01
+
+#define RATE_PITCH_KP 	0.6
+#define RATE_PITCH_KI 	0.6
+#define RATE_PITCH_KD 	0.001
+#define RATE_ROLL_KP 	0.6
+#define RATE_ROLL_KI  	0.6
+#define RATE_ROLL_KD  	0.001
+
 
 #define ERRORCORR_MAX	250.0
 #define ERRORCORR_MAX_P	250.0
@@ -24,27 +32,42 @@ PIDController::PIDController() {
 	pitchAnglePID.KP = ANGLE_PITCH_KP;
 	pitchAnglePID.KI = ANGLE_PITCH_KI;
 	pitchAnglePID.KD = ANGLE_PITCH_KD;
-	yawAnglePID.KI = ANGLE_YAW_KP;
-	yawAnglePID.KI = ANGLE_YAW_KI;
-	yawAnglePID.KD = ANGLE_YAW_KD;
+	
+	yawRatePID.KP = ANGLE_YAW_KP;
+	yawRatePID.KI = ANGLE_YAW_KI;
+	yawRatePID.KD = ANGLE_YAW_KD;
+	rollRatePID.KP = RATE_ROLL_KP;
+	rollRatePID.KI = RATE_ROLL_KI;
+	rollRatePID.KD = RATE_ROLL_KD;
+	pitchRatePID.KP = RATE_PITCH_KP;
+	pitchRatePID.KI = RATE_PITCH_KI;
+	pitchRatePID.KD = RATE_PITCH_KD;
 
-	rollAnglePID.lastTimeStamp = 0;
-	pitchAnglePID.lastTimeStamp = 0;
-	yawAnglePID.lastTimeStamp = 0;
+
+	rollAnglePID.lastTimeStamp = micros();
+	pitchAnglePID.lastTimeStamp = micros();
+	yawRatePID.lastTimeStamp = micros();
 }
 
 void PIDController::calCurrentPID(PID *PID, float target, float measure, float dt) {
 	dt /= 1000000;
 	PID->error = target - measure; // 计算误差
 
-	if (abs(PID->error) < 20.0 && abs(PID->error) > 1.0) {
-		PID->integ += PID->error; // 计算误差积分
+
+	// 积分分离
+	if (abs(PID->error) < 10 && abs(PID->error) > 1) {
+		PID->integ += PID->error * dt; // 计算误差积分	
 	}
 
-	PID->deriv = (dt != 0) ? (PID->error - PID->lastError) / dt : 0; // 计算误差微分
+	
+	PID->deriv = (dt != 0) ? ((PID->error - PID->lastError) / dt) : 0; // 计算误差微分
 
 	if (abs(PID->KI * PID->integ) > ERRORCORR_MAX_I) {
 		PID->integ = (PID->integ > 0) ? ERRORCORR_MAX_I / PID->KI : -ERRORCORR_MAX_I / PID->KI;
+	}
+
+	if (abs(PID->KD * PID->deriv) > ERRORCORR_MAX_D) {
+		PID->deriv = (PID->deriv > 0) ? ERRORCORR_MAX_D / PID->KD : -ERRORCORR_MAX_D / PID->KD;
 	}
 
 	PID->output = (PID->KP * PID->error) + (PID->KI * PID->integ) + (PID->KD * PID->deriv);
@@ -77,13 +100,32 @@ void PIDController::calCurrentPitchAnglePID(float measurePitch, float targetPitc
 	calCurrentPID(&pitchAnglePID, targetPitch, measurePitch, dt);
 }
 
-void PIDController::calCurrentYawAnglePID(float measureYaw, float targetYaw) {
+void PIDController::calCurrentYawRatePID(float measureYaw, float targetYaw) {
 	float t = 0.0, dt = 0.0;
 	t = micros();
-	dt = (yawAnglePID.lastTimeStamp > 0) ? (t - yawAnglePID.lastTimeStamp): 0;
-	yawAnglePID.lastTimeStamp = t;
+	dt = (yawRatePID.lastTimeStamp > 0) ? (t - yawRatePID.lastTimeStamp): 0;
+	yawRatePID.lastTimeStamp = t;
 
-	calCurrentPID(&yawAnglePID, targetYaw, measureYaw, dt);
+	calCurrentPID(&yawRatePID, targetYaw, measureYaw, dt);
+}
+
+
+void PIDController::calCurrentRollRatePID(float measureRollRate, float targetRollRate){
+	float t = 0.0, dt = 0.0;
+	t = micros();
+	dt = (rollRatePID.lastTimeStamp > 0) ? (t - rollRatePID.lastTimeStamp) : 0;
+	rollRatePID.lastTimeStamp = t;
+
+	calCurrentPID(&rollRatePID, targetRollRate, measureRollRate, dt);
+}
+
+void PIDController::calCurrentPitchRatePID(float measurePitchRate, float targetPitchRate) {
+	float t = 0.0, dt = 0.0;
+	t = micros();
+	dt = (pitchRatePID.lastTimeStamp > 0) ? (t - pitchRatePID.lastTimeStamp) : 0;
+	pitchRatePID.lastTimeStamp = t;
+
+	calCurrentPID(&pitchRatePID, targetPitchRate, measurePitchRate, dt);
 }
 
 /* ===================================================================
@@ -100,7 +142,7 @@ float PIDController::getRollCorrect(PIDKind pidKind) {
 		return rollAnglePID.output;
 		break;
 	case RATE:
-		return 0;
+		return rollRatePID.output;
 		break;
 	default:
 		return 0;
@@ -115,7 +157,7 @@ float PIDController::getPitchCorrect(PIDKind pidKind) {
 		return pitchAnglePID.output;
 		break;
 	case RATE:
-		return 0;
+		return pitchRatePID.output;
 		break;
 	default:
 		return 0;
@@ -127,10 +169,10 @@ float PIDController::getYawCorrect(PIDKind pidKind) {
 	switch (pidKind)
 	{
 	case ANGLE:
-		return yawAnglePID.output;
+		return 0;
 		break;
 	case RATE:
-		return 0;
+		return yawRatePID.output;
 		break;
 	default:
 		return 0;
@@ -151,7 +193,7 @@ float PIDController::getRollError(PIDKind pidKind) {
 		return rollAnglePID.error;
 		break;
 	case RATE:
-		return 0;
+		return rollRatePID.error;
 		break;
 	default:
 		return 0;
@@ -166,7 +208,7 @@ float PIDController::getRollInteg(PIDKind pidKind) {
 		return rollAnglePID.integ;
 		break;
 	case RATE:
-		return 0;
+		return rollRatePID.integ;
 		break;
 	default:
 		return 0;
@@ -181,7 +223,7 @@ float PIDController::getRollDeriv(PIDKind pidKind) {
 		return rollAnglePID.deriv;
 		break;
 	case RATE:
-		return 0;
+		return rollRatePID.deriv;
 		break;
 	default:
 		return 0;
@@ -203,7 +245,7 @@ float PIDController::getPitchError(PIDKind pidKind) {
 		return pitchAnglePID.error;
 		break;
 	case RATE:
-		return 0;
+		return pitchRatePID.error;
 		break;
 	default:
 		return 0;
@@ -218,7 +260,7 @@ float PIDController::getPitchInteg(PIDKind pidKind) {
 		return pitchAnglePID.integ;
 		break;
 	case RATE:
-		return 0;
+		return pitchRatePID.integ;
 		break;
 	default:
 		return 0;
@@ -233,7 +275,7 @@ float PIDController::getPitchDeriv(PIDKind pidKind) {
 		return pitchAnglePID.deriv;
 		break;
 	case RATE:
-		return 0;
+		return pitchRatePID.deriv;
 		break;
 	default:
 		return 0;
@@ -251,10 +293,10 @@ float PIDController::getYawError(PIDKind pidKind) {
 	switch (pidKind)
 	{
 	case ANGLE:
-		return yawAnglePID.error;
+		return 0;
 		break;
 	case RATE:
-		return 0;
+		return yawRatePID.error;
 		break;
 	default:
 		return 0;
@@ -266,10 +308,10 @@ float PIDController::getYawInteg(PIDKind pidKind) {
 	switch (pidKind)
 	{
 	case ANGLE:
-		return yawAnglePID.integ;
+		return 0;
 		break;
 	case RATE:
-		return 0;
+		return yawRatePID.integ;
 		break;
 	default:
 		return 0;
@@ -281,10 +323,10 @@ float PIDController::getYawDeriv(PIDKind pidKind) {
 	switch (pidKind)
 	{
 	case ANGLE:
-		return yawAnglePID.deriv;
+		return 0;
 		break;
 	case RATE:
-		return 0;
+		return yawRatePID.deriv;
 		break;
 	default:
 		return 0;
@@ -303,12 +345,15 @@ void PIDController::cleanData(PID *PID) {
 
 void PIDController::cleanRollPIDData() {
 	cleanData(&rollAnglePID);
+	cleanData(&rollRatePID);
 }
 
 void PIDController::cleanPitchPIDData() {
 	cleanData(&pitchAnglePID);
+	cleanData(&pitchRatePID);
 }
 
 void PIDController::cleanYawPIDData() {
-	cleanData(&yawAnglePID);
+	cleanData(&yawRatePID);
+	cleanData(&yawRatePID);
 }

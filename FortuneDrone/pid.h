@@ -14,7 +14,9 @@ class PIDController {
 private:
 	PID rollAnglePID;
 	PID pitchAnglePID;
-	PID yawAnglePID;
+	PID yawRatePID;
+	PID rollRatePID;
+	PID pitchRatePID;
 
 	void calCurrentPID(PID *PID, float target, float measure, float dt);
 	void cleanData(PID *PID);
@@ -28,7 +30,9 @@ public:
 	PIDController();
 	void calCurrentRollAnglePID(float measureRoll, float targetRoll);
 	void calCurrentPitchAnglePID(float measurePitch, float targetPitch);
-	void calCurrentYawAnglePID(float measureYaw, float targetYaw);
+	void calCurrentYawRatePID(float measureYaw, float targetYaw);
+	void calCurrentRollRatePID(float measureRollRate, float targetRollRate);
+	void calCurrentPitchRatePID(float measurePitchRate, float targetPitchRate);
 
 	/* ===================================================================
 		* 
